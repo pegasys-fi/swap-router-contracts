@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity >=0.5.0;
 
-import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol';
-import '@uniswap/v3-core/contracts/libraries/LowGasSafeMath.sol';
+import '@pollum-io/pegasys-protocol/contracts/pegasys-core/interfaces/IPegasysPair.sol';
+import '@pollum-io/v2-core/contracts/libraries/LowGasSafeMath.sol';
 
-library UniswapV2Library {
+library PegasysLibrary {
     using LowGasSafeMath for uint256;
 
     // returns sorted token addresses, used to handle return values from pairs sorted in this order
@@ -15,11 +15,7 @@ library UniswapV2Library {
     }
 
     // calculates the CREATE2 address for a pair without making any external calls
-    function pairFor(
-        address factory,
-        address tokenA,
-        address tokenB
-    ) internal pure returns (address pair) {
+    function pairFor(address factory, address tokenA, address tokenB) internal pure returns (address pair) {
         (address token0, address token1) = sortTokens(tokenA, tokenB);
         pair = address(
             uint256(
@@ -42,7 +38,7 @@ library UniswapV2Library {
         address tokenB
     ) internal view returns (uint256 reserveA, uint256 reserveB) {
         (address token0, ) = sortTokens(tokenA, tokenB);
-        (uint256 reserve0, uint256 reserve1, ) = IUniswapV2Pair(pairFor(factory, tokenA, tokenB)).getReserves();
+        (uint256 reserve0, uint256 reserve1, ) = IPegasysPair(pairFor(factory, tokenA, tokenB)).getReserves();
         (reserveA, reserveB) = tokenA == token0 ? (reserve0, reserve1) : (reserve1, reserve0);
     }
 

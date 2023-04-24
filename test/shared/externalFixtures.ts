@@ -1,8 +1,8 @@
 import {
   abi as FACTORY_ABI,
   bytecode as FACTORY_BYTECODE,
-} from '@uniswap/v3-core/artifacts/contracts/UniswapV3Factory.sol/UniswapV3Factory.json'
-import { abi as FACTORY_V2_ABI, bytecode as FACTORY_V2_BYTECODE } from '@uniswap/v2-core/build/UniswapV2Factory.json'
+} from '@pollum-io/v2-core/artifacts/contracts/PegasysV2Factory.sol/PegasysV2Factory.json'
+import { abi as FACTORY_V2_ABI, bytecode as FACTORY_V2_BYTECODE } from '@pollum-io/pegasys-protocol/artifacts/contracts/pegasys-core/PegasysFactory.sol/PegasysFactory.json'
 import { Fixture } from 'ethereum-waffle'
 import { ethers, waffle } from 'hardhat'
 import { IWETH9, MockTimeSwapRouter02 } from '../../typechain'
@@ -14,7 +14,7 @@ import { constants } from 'ethers'
 import {
   abi as NFT_POSITION_MANAGER_ABI,
   bytecode as NFT_POSITION_MANAGER_BYTECODE,
-} from '@uniswap/v3-periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json'
+} from '@pollum-io/v2-periphery/artifacts/contracts/NonfungiblePositionManager.sol/NonfungiblePositionManager.json'
 
 const wethFixture: Fixture<{ weth9: IWETH9 }> = async ([wallet]) => {
   const weth9 = (await waffle.deployContract(wallet, {

@@ -5,7 +5,7 @@ pragma abicoder v2;
 import '../base/OracleSlippage.sol';
 
 contract OracleSlippageTest is OracleSlippage {
-    mapping(address => mapping(address => mapping(uint24 => IUniswapV3Pool))) private pools;
+    mapping(address => mapping(address => mapping(uint24 => IPegasysV2Pool))) private pools;
     uint256 internal time;
 
     constructor(address _factory, address _WETH9) PeripheryImmutableState(_factory, _WETH9) {}
@@ -18,12 +18,7 @@ contract OracleSlippageTest is OracleSlippage {
         return time;
     }
 
-    function registerPool(
-        IUniswapV3Pool pool,
-        address tokenIn,
-        address tokenOut,
-        uint24 fee
-    ) external {
+    function registerPool(IPegasysV2Pool pool, address tokenIn, address tokenOut, uint24 fee) external {
         pools[tokenIn][tokenOut][fee] = pool;
         pools[tokenOut][tokenIn][fee] = pool;
     }
@@ -32,23 +27,20 @@ contract OracleSlippageTest is OracleSlippage {
         address tokenA,
         address tokenB,
         uint24 fee
-    ) internal view override returns (IUniswapV3Pool pool) {
+    ) internal view override returns (IPegasysV2Pool pool) {
         pool = pools[tokenA][tokenB][fee];
     }
 
-    function testGetBlockStartingAndCurrentTick(IUniswapV3Pool pool)
-        external
-        view
-        returns (int24 blockStartingTick, int24 currentTick)
-    {
+    function testGetBlockStartingAndCurrentTick(
+        IPegasysV2Pool pool
+    ) external view returns (int24 blockStartingTick, int24 currentTick) {
         return getBlockStartingAndCurrentTick(pool);
     }
 
-    function testGetSyntheticTicks(bytes memory path, uint32 secondsAgo)
-        external
-        view
-        returns (int256 syntheticAverageTick, int256 syntheticCurrentTick)
-    {
+    function testGetSyntheticTicks(
+        bytes memory path,
+        uint32 secondsAgo
+    ) external view returns (int256 syntheticAverageTick, int256 syntheticCurrentTick) {
         return getSyntheticTicks(path, secondsAgo);
     }
 

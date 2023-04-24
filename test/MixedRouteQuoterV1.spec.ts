@@ -16,9 +16,9 @@ import {
 } from './shared/quoter'
 import snapshotGasCost from './shared/snapshotGasCost'
 
-import { abi as PAIR_V2_ABI } from '@uniswap/v2-core/build/UniswapV2Pair.json'
+import { abi as PAIR_V2_ABI } from '@pollum-io/pegasys-protocol/artifacts/contracts/pegasys-core/PegasysPair.sol/PegasysPair.json'
 
-const V3_MAX_FEE = 999999 // = 1_000_000 - 1 since must be < 1_000_000
+const V3_MAX_FEE = Number(999999) // = 1_000_000 - 1 since must be < 1_000_000
 
 describe('MixedRouteQuoterV1', function () {
   this.timeout(40000)
@@ -63,13 +63,13 @@ describe('MixedRouteQuoterV1', function () {
 
   before('create fixture loader', async () => {
     const wallets = await (ethers as any).getSigners()
-    ;[wallet, trader] = wallets
+      ;[wallet, trader] = wallets
     loadFixture = waffle.createFixtureLoader(wallets)
   })
 
   // helper for getting weth and token balances
   beforeEach('load fixture', async () => {
-    ;({ tokens, nft, factoryV2, quoter } = await loadFixture(swapRouterFixture))
+    ; ({ tokens, nft, factoryV2, quoter } = await loadFixture(swapRouterFixture))
   })
 
   const addLiquidityV2 = async (
@@ -117,7 +117,7 @@ describe('MixedRouteQuoterV1', function () {
       await addLiquidityV2(pair02Address, tokens[0], tokens[2], '1000000', '1000000')
     })
 
-    /// @dev Test running the old suite on the new function but with protocolFlags only being V3[]
+    // / @dev Test running the old suite on the new function but with protocolFlags only being V3[]
     describe('#quoteExactInput V3 only', () => {
       it('0 -> 2 cross 2 tick', async () => {
         const {

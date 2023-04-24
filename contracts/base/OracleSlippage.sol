@@ -4,22 +4,20 @@ pragma abicoder v2;
 
 import '../interfaces/IOracleSlippage.sol';
 
-import '@uniswap/v3-periphery/contracts/base/PeripheryImmutableState.sol';
-import '@uniswap/v3-periphery/contracts/base/BlockTimestamp.sol';
-import '@uniswap/v3-periphery/contracts/libraries/Path.sol';
-import '@uniswap/v3-periphery/contracts/libraries/PoolAddress.sol';
-import '@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol';
-import '@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol';
+import '@pollum-io/v2-periphery/contracts/base/PeripheryImmutableState.sol';
+import '@pollum-io/v2-periphery/contracts/base/BlockTimestamp.sol';
+import '@pollum-io/v2-periphery/contracts/libraries/Path.sol';
+import '@pollum-io/v2-periphery/contracts/libraries/PoolAddress.sol';
+import '@pollum-io/v2-core/contracts/interfaces/IPegasysV2Pool.sol';
+import '@pollum-io/v2-periphery/contracts/libraries/OracleLibrary.sol';
 
 abstract contract OracleSlippage is IOracleSlippage, PeripheryImmutableState, BlockTimestamp {
     using Path for bytes;
 
     /// @dev Returns the tick as of the beginning of the current block, and as of right now, for the given pool.
-    function getBlockStartingAndCurrentTick(IUniswapV3Pool pool)
-        internal
-        view
-        returns (int24 blockStartingTick, int24 currentTick)
-    {
+    function getBlockStartingAndCurrentTick(
+        IPegasysV2Pool pool
+    ) internal view returns (int24 blockStartingTick, int24 currentTick) {
         uint16 observationIndex;
         uint16 observationCardinality;
         (, currentTick, observationIndex, observationCardinality, , , ) = pool.slot0();
@@ -35,8 +33,9 @@ abstract contract OracleSlippage is IOracleSlippage, PeripheryImmutableState, Bl
             blockStartingTick = currentTick;
         } else {
             uint256 prevIndex = (uint256(observationIndex) + observationCardinality - 1) % observationCardinality;
-            (uint32 prevObservationTimestamp, int56 prevTickCumulative, , bool prevInitialized) =
-                pool.observations(prevIndex);
+            (uint32 prevObservationTimestamp, int56 prevTickCumulative, , bool prevInitialized) = pool.observations(
+                prevIndex
+            );
 
             require(prevInitialized, 'ONI');
 
@@ -50,18 +49,17 @@ abstract contract OracleSlippage is IOracleSlippage, PeripheryImmutableState, Bl
         address tokenA,
         address tokenB,
         uint24 fee
-    ) internal view virtual returns (IUniswapV3Pool pool) {
-        pool = IUniswapV3Pool(PoolAddress.computeAddress(factory, PoolAddress.getPoolKey(tokenA, tokenB, fee)));
+    ) internal view virtual returns (IPegasysV2Pool pool) {
+        pool = IPegasysV2Pool(PoolAddress.computeAddress(factory, PoolAddress.getPoolKey(tokenA, tokenB, fee)));
     }
 
     /// @dev Returns the synthetic time-weighted average tick as of secondsAgo, as well as the current tick,
     /// for the given path. Returned synthetic ticks always represent tokenOut/tokenIn prices,
     /// meaning lower ticks are worse.
-    function getSyntheticTicks(bytes memory path, uint32 secondsAgo)
-        internal
-        view
-        returns (int256 syntheticAverageTick, int256 syntheticCurrentTick)
-    {
+    function getSyntheticTicks(
+        bytes memory path,
+        uint32 secondsAgo
+    ) internal view returns (int256 syntheticAverageTick, int256 syntheticCurrentTick) {
         bool lowerTicksAreWorse;
 
         uint256 numPools = path.numPools();
@@ -69,7 +67,7 @@ abstract contract OracleSlippage is IOracleSlippage, PeripheryImmutableState, Bl
         for (uint256 i = 0; i < numPools; i++) {
             // this assumes the path is sorted in swap order
             (address tokenIn, address tokenOut, uint24 fee) = path.decodeFirstPool();
-            IUniswapV3Pool pool = getPoolAddress(tokenIn, tokenOut, fee);
+            IPegasysV2Pool pool = getPoolAddress(tokenIn, tokenOut, fee);
 
             // get the average and current ticks for the current pool
             int256 averageTick;
@@ -79,7 +77,7 @@ abstract contract OracleSlippage is IOracleSlippage, PeripheryImmutableState, Bl
                 (averageTick, currentTick) = getBlockStartingAndCurrentTick(pool);
             } else {
                 (averageTick, ) = OracleLibrary.consult(address(pool), secondsAgo);
-                (, currentTick, , , , , ) = IUniswapV3Pool(pool).slot0();
+                (, currentTick, , , , , ) = IPegasysV2Pool(pool).slot0();
             }
 
             if (i == numPools - 1) {
@@ -130,10 +128,12 @@ abstract contract OracleSlippage is IOracleSlippage, PeripheryImmutableState, Bl
     ) internal view returns (int256 averageSyntheticAverageTick, int256 averageSyntheticCurrentTick) {
         require(paths.length == amounts.length);
 
-        OracleLibrary.WeightedTickData[] memory weightedSyntheticAverageTicks =
-            new OracleLibrary.WeightedTickData[](paths.length);
-        OracleLibrary.WeightedTickData[] memory weightedSyntheticCurrentTicks =
-            new OracleLibrary.WeightedTickData[](paths.length);
+        OracleLibrary.WeightedTickData[] memory weightedSyntheticAverageTicks = new OracleLibrary.WeightedTickData[](
+            paths.length
+        );
+        OracleLibrary.WeightedTickData[] memory weightedSyntheticCurrentTicks = new OracleLibrary.WeightedTickData[](
+            paths.length
+        );
 
         for (uint256 i = 0; i < paths.length; i++) {
             (int256 syntheticAverageTick, int256 syntheticCurrentTick) = getSyntheticTicks(paths[i], secondsAgo);
@@ -164,8 +164,11 @@ abstract contract OracleSlippage is IOracleSlippage, PeripheryImmutableState, Bl
         uint24 maximumTickDivergence,
         uint32 secondsAgo
     ) external view override {
-        (int256 averageSyntheticAverageTick, int256 averageSyntheticCurrentTick) =
-            getSyntheticTicks(paths, amounts, secondsAgo);
+        (int256 averageSyntheticAverageTick, int256 averageSyntheticCurrentTick) = getSyntheticTicks(
+            paths,
+            amounts,
+            secondsAgo
+        );
         require(averageSyntheticAverageTick - averageSyntheticCurrentTick < maximumTickDivergence, 'TD');
     }
 }

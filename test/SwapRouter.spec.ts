@@ -1,10 +1,10 @@
 import { defaultAbiCoder } from '@ethersproject/abi'
-import { abi as PAIR_V2_ABI } from '@uniswap/v2-core/build/UniswapV2Pair.json'
+import { abi as PAIR_V2_ABI } from '@pollum-io/pegasys-protocol/artifacts/contracts/pegasys-core/PegasysPair.sol/PegasysPair.json'
 import { Fixture } from 'ethereum-waffle'
 import { BigNumber, constants, Contract, ContractTransaction, Wallet } from 'ethers'
 import { solidityPack } from 'ethers/lib/utils'
 import { ethers, waffle } from 'hardhat'
-import { IUniswapV2Pair, IWETH9, MockTimeSwapRouter02, MixedRouteQuoterV1, TestERC20 } from '../typechain'
+import { IPegasysPair, IWETH9, MockTimeSwapRouter02, MixedRouteQuoterV1, TestERC20 } from '../typechain'
 import completeFixture from './shared/completeFixture'
 import { computePoolAddress } from './shared/computePoolAddress'
 import {
@@ -106,7 +106,7 @@ describe('SwapRouter', function () {
 
   // helper for getting weth and token balances
   beforeEach('load fixture', async () => {
-    ;({ router, quoter, weth9, factory, factoryV2, tokens, nft } = await loadFixture(swapRouterFixture))
+    ; ({ router, quoter, weth9, factory, factoryV2, tokens, nft } = await loadFixture(swapRouterFixture))
 
     getBalances = async (who: string) => {
       const balances = await Promise.all([
@@ -944,11 +944,11 @@ describe('SwapRouter', function () {
     })
   })
 
-  async function createV2Pool(tokenA: TestERC20, tokenB: TestERC20): Promise<IUniswapV2Pair> {
+  async function createV2Pool(tokenA: TestERC20, tokenB: TestERC20): Promise<IPegasysPair> {
     await factoryV2.createPair(tokenA.address, tokenB.address)
 
     const pairAddress = await factoryV2.getPair(tokenA.address, tokenB.address)
-    const pair = new ethers.Contract(pairAddress, PAIR_V2_ABI, wallet) as IUniswapV2Pair
+    const pair = new ethers.Contract(pairAddress, PAIR_V2_ABI, wallet) as IPegasysPair
 
     await tokenA.transfer(pair.address, liquidity)
     await tokenB.transfer(pair.address, liquidity)
@@ -959,8 +959,8 @@ describe('SwapRouter', function () {
   }
 
   describe('swaps - v2', () => {
-    let pairs: IUniswapV2Pair[]
-    let wethPairs: IUniswapV2Pair[]
+    let pairs: IPegasysPair[]
+    let wethPairs: IPegasysPair[]
 
     async function createPoolWETH9(token: TestERC20) {
       await weth9.deposit({ value: liquidity })

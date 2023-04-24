@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import { constants } from 'ethers'
 import hre, { ethers } from 'hardhat'
-import { TokenValidator, TestERC20, IUniswapV2Pair__factory } from '../typechain'
+import { TokenValidator, TestERC20, IPegasysPair__factory } from '../typechain'
 
 describe('TokenValidator', function () {
   let tokenValidator: TokenValidator
@@ -99,7 +99,7 @@ describe('TokenValidator', function () {
 
   it('succeeds to return unknown when flash loaning full reserves', async () => {
     const pairAddress = '0xab293dce330b92aa52bc2a7cd3816edaa75f890b' // WTF/ETH pair
-    const pair = IUniswapV2Pair__factory.connect(pairAddress, ethers.provider)
+    const pair = IPegasysPair__factory.connect(pairAddress, ethers.provider)
     const { reserve0: wtfReserve } = await pair.callStatic.getReserves()
 
     const isFot1 = await tokenValidator.callStatic.validate(
