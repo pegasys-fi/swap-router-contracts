@@ -4,19 +4,19 @@ pragma abicoder v2;
 
 import '../interfaces/IOracleSlippage.sol';
 
-import '@pollum-io/v2-periphery/contracts/base/PeripheryImmutableState.sol';
-import '@pollum-io/v2-periphery/contracts/base/BlockTimestamp.sol';
-import '@pollum-io/v2-periphery/contracts/libraries/Path.sol';
-import '@pollum-io/v2-periphery/contracts/libraries/PoolAddress.sol';
-import '@pollum-io/v2-core/contracts/interfaces/IPegasysV2Pool.sol';
-import '@pollum-io/v2-periphery/contracts/libraries/OracleLibrary.sol';
+import '@pollum-io/v3-periphery/contracts/base/PeripheryImmutableState.sol';
+import '@pollum-io/v3-periphery/contracts/base/BlockTimestamp.sol';
+import '@pollum-io/v3-periphery/contracts/libraries/Path.sol';
+import '@pollum-io/v3-periphery/contracts/libraries/PoolAddress.sol';
+import '@pollum-io/v3-core/contracts/interfaces/IPegasysV3Pool.sol';
+import '@pollum-io/v3-periphery/contracts/libraries/OracleLibrary.sol';
 
 abstract contract OracleSlippage is IOracleSlippage, PeripheryImmutableState, BlockTimestamp {
     using Path for bytes;
 
     /// @dev Returns the tick as of the beginning of the current block, and as of right now, for the given pool.
     function getBlockStartingAndCurrentTick(
-        IPegasysV2Pool pool
+        IPegasysV3Pool pool
     ) internal view returns (int24 blockStartingTick, int24 currentTick) {
         uint16 observationIndex;
         uint16 observationCardinality;
@@ -49,8 +49,8 @@ abstract contract OracleSlippage is IOracleSlippage, PeripheryImmutableState, Bl
         address tokenA,
         address tokenB,
         uint24 fee
-    ) internal view virtual returns (IPegasysV2Pool pool) {
-        pool = IPegasysV2Pool(PoolAddress.computeAddress(factory, PoolAddress.getPoolKey(tokenA, tokenB, fee)));
+    ) internal view virtual returns (IPegasysV3Pool pool) {
+        pool = IPegasysV3Pool(PoolAddress.computeAddress(factory, PoolAddress.getPoolKey(tokenA, tokenB, fee)));
     }
 
     /// @dev Returns the synthetic time-weighted average tick as of secondsAgo, as well as the current tick,
@@ -67,7 +67,7 @@ abstract contract OracleSlippage is IOracleSlippage, PeripheryImmutableState, Bl
         for (uint256 i = 0; i < numPools; i++) {
             // this assumes the path is sorted in swap order
             (address tokenIn, address tokenOut, uint24 fee) = path.decodeFirstPool();
-            IPegasysV2Pool pool = getPoolAddress(tokenIn, tokenOut, fee);
+            IPegasysV3Pool pool = getPoolAddress(tokenIn, tokenOut, fee);
 
             // get the average and current ticks for the current pool
             int256 averageTick;
@@ -77,7 +77,7 @@ abstract contract OracleSlippage is IOracleSlippage, PeripheryImmutableState, Bl
                 (averageTick, currentTick) = getBlockStartingAndCurrentTick(pool);
             } else {
                 (averageTick, ) = OracleLibrary.consult(address(pool), secondsAgo);
-                (, currentTick, , , , , ) = IPegasysV2Pool(pool).slot0();
+                (, currentTick, , , , , ) = IPegasysV3Pool(pool).slot0();
             }
 
             if (i == numPools - 1) {

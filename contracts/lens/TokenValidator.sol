@@ -3,7 +3,7 @@ pragma solidity =0.7.6;
 pragma abicoder v2;
 
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
-import '@pollum-io/v2-periphery/contracts/base/PeripheryImmutableState.sol';
+import '@pollum-io/v3-periphery/contracts/base/PeripheryImmutableState.sol';
 import '@pollum-io/pegasys-protocol/contracts/pegasys-core/interfaces/IPegasysCallee.sol';
 import '@pollum-io/pegasys-protocol/contracts/pegasys-core/interfaces/IPegasysPair.sol';
 import '../libraries/PegasysLibrary.sol';
@@ -27,7 +27,7 @@ import '../base/ImmutableState.sol';
 /// @dev    a flashloan to test the token.
 contract TokenValidator is ITokenValidator, IPegasysCallee, ImmutableState {
     string internal constant FOT_REVERT_STRING = 'FOT';
-    // https://github.com/Uniswap/v2-core/blob/1136544ac842ff48ae0b1b939701436598d74075/contracts/PegasysPair.sol#L46
+    // https://github.com/Uniswap/v3-core/blob/1136544ac842ff48ae0b1b939701436598d74075/contracts/PegasysPair.sol#L46
     string internal constant STF_REVERT_STRING_SUFFIX = 'TRANSFER_FAILED';
 
     constructor(address _factoryV2, address _positionManager) ImmutableState(_factoryV2, _positionManager) {}
