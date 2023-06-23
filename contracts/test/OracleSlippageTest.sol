@@ -5,7 +5,7 @@ pragma abicoder v2;
 import '../base/OracleSlippage.sol';
 
 contract OracleSlippageTest is OracleSlippage {
-    mapping(address => mapping(address => mapping(uint24 => IPegasysV2Pool))) private pools;
+    mapping(address => mapping(address => mapping(uint24 => IPegasysV3Pool))) private pools;
     uint256 internal time;
 
     constructor(address _factory, address _WETH9) PeripheryImmutableState(_factory, _WETH9) {}
@@ -18,7 +18,7 @@ contract OracleSlippageTest is OracleSlippage {
         return time;
     }
 
-    function registerPool(IPegasysV2Pool pool, address tokenIn, address tokenOut, uint24 fee) external {
+    function registerPool(IPegasysV3Pool pool, address tokenIn, address tokenOut, uint24 fee) external {
         pools[tokenIn][tokenOut][fee] = pool;
         pools[tokenOut][tokenIn][fee] = pool;
     }
@@ -27,12 +27,12 @@ contract OracleSlippageTest is OracleSlippage {
         address tokenA,
         address tokenB,
         uint24 fee
-    ) internal view override returns (IPegasysV2Pool pool) {
+    ) internal view override returns (IPegasysV3Pool pool) {
         pool = pools[tokenA][tokenB][fee];
     }
 
     function testGetBlockStartingAndCurrentTick(
-        IPegasysV2Pool pool
+        IPegasysV3Pool pool
     ) external view returns (int24 blockStartingTick, int24 currentTick) {
         return getBlockStartingAndCurrentTick(pool);
     }

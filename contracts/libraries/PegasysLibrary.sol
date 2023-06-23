@@ -2,7 +2,7 @@
 pragma solidity >=0.5.0;
 
 import '@pollum-io/pegasys-protocol/contracts/pegasys-core/interfaces/IPegasysPair.sol';
-import '@pollum-io/v2-core/contracts/libraries/LowGasSafeMath.sol';
+import '@pollum-io/v3-core/contracts/libraries/LowGasSafeMath.sol';
 
 library PegasysLibrary {
     using LowGasSafeMath for uint256;

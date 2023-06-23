@@ -2,15 +2,15 @@
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
-import '@pollum-io/v2-periphery/contracts/base/PeripheryImmutableState.sol';
-import '@pollum-io/v2-core/contracts/libraries/SafeCast.sol';
-import '@pollum-io/v2-core/contracts/libraries/TickMath.sol';
-import '@pollum-io/v2-core/contracts/libraries/TickBitmap.sol';
-import '@pollum-io/v2-core/contracts/interfaces/IPegasysV2Pool.sol';
-import '@pollum-io/v2-core/contracts/interfaces/callback/IPegasysV2SwapCallback.sol';
-import '@pollum-io/v2-periphery/contracts/libraries/Path.sol';
-import '@pollum-io/v2-periphery/contracts/libraries/PoolAddress.sol';
-import '@pollum-io/v2-periphery/contracts/libraries/CallbackValidation.sol';
+import '@pollum-io/v3-periphery/contracts/base/PeripheryImmutableState.sol';
+import '@pollum-io/v3-core/contracts/libraries/SafeCast.sol';
+import '@pollum-io/v3-core/contracts/libraries/TickMath.sol';
+import '@pollum-io/v3-core/contracts/libraries/TickBitmap.sol';
+import '@pollum-io/v3-core/contracts/interfaces/IPegasysV3Pool.sol';
+import '@pollum-io/v3-core/contracts/interfaces/callback/IPegasysV3SwapCallback.sol';
+import '@pollum-io/v3-periphery/contracts/libraries/Path.sol';
+import '@pollum-io/v3-periphery/contracts/libraries/PoolAddress.sol';
+import '@pollum-io/v3-periphery/contracts/libraries/CallbackValidation.sol';
 import '@pollum-io/pegasys-protocol/contracts/pegasys-core/interfaces/IPegasysPair.sol';
 
 import '../base/ImmutableState.sol';
@@ -23,10 +23,10 @@ import '../libraries/PegasysLibrary.sol';
 /// @notice Does not support exact output swaps since using the contract balance between exactOut swaps is not supported
 /// @dev These functions are not gas efficient and should _not_ be called on chain. Instead, optimistically execute
 /// the swap and check the amounts in the callback.
-contract MixedRouteQuoterV1 is IMixedRouteQuoterV1, IPegasysV2SwapCallback, PeripheryImmutableState {
+contract MixedRouteQuoterV1 is IMixedRouteQuoterV1, IPegasysV3SwapCallback, PeripheryImmutableState {
     using Path for bytes;
     using SafeCast for uint256;
-    using PoolTicksCounter for IPegasysV2Pool;
+    using PoolTicksCounter for IPegasysV3Pool;
     address public immutable factoryV2;
     /// @dev Value to bit mask with path fee to determine if V2 or V3 route
     // max V3 fee:           000011110100001001000000 (24 bits)
@@ -40,8 +40,8 @@ contract MixedRouteQuoterV1 is IMixedRouteQuoterV1, IPegasysV2SwapCallback, Peri
         factoryV2 = _factoryV2;
     }
 
-    function getPool(address tokenA, address tokenB, uint24 fee) private view returns (IPegasysV2Pool) {
-        return IPegasysV2Pool(PoolAddress.computeAddress(factory, PoolAddress.getPoolKey(tokenA, tokenB, fee)));
+    function getPool(address tokenA, address tokenB, uint24 fee) private view returns (IPegasysV3Pool) {
+        return IPegasysV3Pool(PoolAddress.computeAddress(factory, PoolAddress.getPoolKey(tokenA, tokenB, fee)));
     }
 
     /// @dev Given an amountIn, fetch the reserves of the V2 pair and get the amountOut
@@ -50,8 +50,8 @@ contract MixedRouteQuoterV1 is IMixedRouteQuoterV1, IPegasysV2SwapCallback, Peri
         return PegasysLibrary.getAmountOut(amountIn, reserveIn, reserveOut);
     }
 
-    /// @inheritdoc IPegasysV2SwapCallback
-    function pegasysV2SwapCallback(int256 amount0Delta, int256 amount1Delta, bytes memory path) external view override {
+    /// @inheritdoc IPegasysV3SwapCallback
+    function pegasysV3SwapCallback(int256 amount0Delta, int256 amount1Delta, bytes memory path) external view override {
         require(amount0Delta > 0 || amount1Delta > 0); // swaps entirely within 0-liquidity regions are not supported
         (address tokenIn, address tokenOut, uint24 fee) = path.decodeFirstPool();
         CallbackValidation.verifyCallback(factory, tokenIn, tokenOut, fee);
@@ -60,7 +60,7 @@ contract MixedRouteQuoterV1 is IMixedRouteQuoterV1, IPegasysV2SwapCallback, Peri
             ? (tokenIn < tokenOut, uint256(-amount1Delta))
             : (tokenOut < tokenIn, uint256(-amount0Delta));
 
-        IPegasysV2Pool pool = getPool(tokenIn, tokenOut, fee);
+        IPegasysV3Pool pool = getPool(tokenIn, tokenOut, fee);
         (uint160 v3SqrtPriceX96After, int24 tickAfter, , , , , ) = pool.slot0();
 
         if (isExactInput) {
@@ -93,7 +93,7 @@ contract MixedRouteQuoterV1 is IMixedRouteQuoterV1, IPegasysV2SwapCallback, Peri
 
     function handleV3Revert(
         bytes memory reason,
-        IPegasysV2Pool pool,
+        IPegasysV3Pool pool,
         uint256 gasEstimate
     ) private view returns (uint256 amount, uint160 sqrtPriceX96After, uint32 initializedTicksCrossed, uint256) {
         int24 tickBefore;
@@ -115,7 +115,7 @@ contract MixedRouteQuoterV1 is IMixedRouteQuoterV1, IPegasysV2SwapCallback, Peri
         returns (uint256 amountOut, uint160 sqrtPriceX96After, uint32 initializedTicksCrossed, uint256 gasEstimate)
     {
         bool zeroForOne = params.tokenIn < params.tokenOut;
-        IPegasysV2Pool pool = getPool(params.tokenIn, params.tokenOut, params.fee);
+        IPegasysV3Pool pool = getPool(params.tokenIn, params.tokenOut, params.fee);
 
         uint256 gasBefore = gasleft();
         try

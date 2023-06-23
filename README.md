@@ -3,7 +3,7 @@
 [![Tests](https://github.com/pegasys-fi/swap-router-contracts/workflows/Tests/badge.svg)](https://github.com/pegasys-fi/swap-router-contracts/actions?query=workflow%3ATests)
 [![Lint](https://github.com/pegasys-fi/swap-router-contracts/workflows/Lint/badge.svg)](https://github.com/pegasys-fi/swap-router-contracts/actions?query=workflow%3ALint)
 
-This repository contains smart contracts for swapping on the Pegasys V1 and V2 protocols.
+This repository contains smart contracts for swapping on the Pegasys V1 and V3 protocols.
 
 
 ## Local deployment

@@ -2,12 +2,12 @@
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
-import '@pollum-io/v2-core/contracts/libraries/SafeCast.sol';
-import '@pollum-io/v2-core/contracts/libraries/TickMath.sol';
-import '@pollum-io/v2-core/contracts/interfaces/IPegasysV2Pool.sol';
-import '@pollum-io/v2-periphery/contracts/libraries/Path.sol';
-import '@pollum-io/v2-periphery/contracts/libraries/PoolAddress.sol';
-import '@pollum-io/v2-periphery/contracts/libraries/CallbackValidation.sol';
+import '@pollum-io/v3-core/contracts/libraries/SafeCast.sol';
+import '@pollum-io/v3-core/contracts/libraries/TickMath.sol';
+import '@pollum-io/v3-core/contracts/interfaces/IPegasysV3Pool.sol';
+import '@pollum-io/v3-periphery/contracts/libraries/Path.sol';
+import '@pollum-io/v3-periphery/contracts/libraries/PoolAddress.sol';
+import '@pollum-io/v3-periphery/contracts/libraries/CallbackValidation.sol';
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 
 import './interfaces/IV3SwapRouter.sol';
@@ -15,8 +15,8 @@ import './base/PeripheryPaymentsWithFeeExtended.sol';
 import './base/OracleSlippage.sol';
 import './libraries/Constants.sol';
 
-/// @title Pegasys V2 Swap Router
-/// @notice Router for stateless execution of swaps against Pegasys V2
+/// @title Pegasys V3 Swap Router
+/// @notice Router for stateless execution of swaps against Pegasys V3
 abstract contract V3SwapRouter is IV3SwapRouter, PeripheryPaymentsWithFeeExtended, OracleSlippage {
     using Path for bytes;
     using SafeCast for uint256;
@@ -29,8 +29,8 @@ abstract contract V3SwapRouter is IV3SwapRouter, PeripheryPaymentsWithFeeExtende
     uint256 private amountInCached = DEFAULT_AMOUNT_IN_CACHED;
 
     /// @dev Returns the pool for the given token pair and fee. The pool contract may or may not exist.
-    function getPool(address tokenA, address tokenB, uint24 fee) private view returns (IPegasysV2Pool) {
-        return IPegasysV2Pool(PoolAddress.computeAddress(factory, PoolAddress.getPoolKey(tokenA, tokenB, fee)));
+    function getPool(address tokenA, address tokenB, uint24 fee) private view returns (IPegasysV3Pool) {
+        return IPegasysV3Pool(PoolAddress.computeAddress(factory, PoolAddress.getPoolKey(tokenA, tokenB, fee)));
     }
 
     struct SwapCallbackData {
@@ -38,8 +38,8 @@ abstract contract V3SwapRouter is IV3SwapRouter, PeripheryPaymentsWithFeeExtende
         address payer;
     }
 
-    /// @inheritdoc IPegasysV2SwapCallback
-    function pegasysV2SwapCallback(int256 amount0Delta, int256 amount1Delta, bytes calldata _data) external override {
+    /// @inheritdoc IPegasysV3SwapCallback
+    function pegasysV3SwapCallback(int256 amount0Delta, int256 amount1Delta, bytes calldata _data) external override {
         require(amount0Delta > 0 || amount1Delta > 0); // swaps entirely within 0-liquidity regions are not supported
         SwapCallbackData memory data = abi.decode(_data, (SwapCallbackData));
         (address tokenIn, address tokenOut, uint24 fee) = data.path.decodeFirstPool();

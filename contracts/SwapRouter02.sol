@@ -2,8 +2,8 @@
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
-import '@pollum-io/v2-periphery/contracts/base/SelfPermit.sol';
-import '@pollum-io/v2-periphery/contracts/base/PeripheryImmutableState.sol';
+import '@pollum-io/v3-periphery/contracts/base/SelfPermit.sol';
+import '@pollum-io/v3-periphery/contracts/base/PeripheryImmutableState.sol';
 
 import './interfaces/ISwapRouter02.sol';
 import './V2SwapRouter.sol';
@@ -11,7 +11,7 @@ import './V3SwapRouter.sol';
 import './base/ApproveAndCall.sol';
 import './base/MulticallExtended.sol';
 
-/// @title Pegasys V1 and V2 Swap Router
+/// @title Pegasys V1 and V3 Swap Router
 contract SwapRouter02 is ISwapRouter02, V2SwapRouter, V3SwapRouter, ApproveAndCall, MulticallExtended, SelfPermit {
     constructor(
         address _factoryV2,
